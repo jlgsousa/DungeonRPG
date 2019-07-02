@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Dungeon Droid</string>
+
+    <string name="player_name">Player Name: </string>
+    <string name="player_password">Password: </string>
+    <string name="player_register">Register</string>
+    <string name="player_login">Login</string>
+    <string name="existing_user">User already exists!</string>
+    <string name="registration_done">Register done!</string>
+    <string name="cancel">Cancel</string>
+    <string name="username_or_password_incorrect">Username or Password incorrect</string>
+</resources>
