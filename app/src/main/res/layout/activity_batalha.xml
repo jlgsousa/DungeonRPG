@@ -12,7 +12,7 @@
 
 
         <ImageView
-            android:id="@+id/mao1"
+            android:id="@+id/myHand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_above="@+id/frameLayout"
@@ -20,7 +20,7 @@
             android:layout_alignParentStart="true" />
 
         <ImageView
-            android:id="@+id/mao2"
+            android:id="@+id/machineHand"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="A wild beast appeared\nWhat will you do?!"
-            android:id="@+id/textView"
+            android:id="@+id/messageView"
             android:layout_below="@+id/linearLayout"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
@@ -56,7 +56,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Rock"
-        android:onClick="Rock"
+        android:onClick="rock"
         android:layout_alignTop="@+id/Paper"
         android:layout_alignLeft="@+id/Scissors"
         android:layout_alignStart="@+id/Scissors" />
@@ -66,7 +66,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Paper"
-        android:onClick="Paper"
+        android:onClick="paper"
         android:layout_above="@+id/run"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
@@ -76,7 +76,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Scissors"
-        android:onClick="Scissors"
+        android:onClick="scissors"
         android:layout_below="@+id/Paper"
         android:layout_toLeftOf="@+id/Paper"
         android:layout_toStartOf="@+id/Paper" />
@@ -89,21 +89,21 @@
         android:layout_alignParentBottom="true"
         android:layout_alignLeft="@+id/Paper"
         android:layout_alignStart="@+id/Paper"
-        android:onClick="Run"/>
+        android:onClick="run"/>
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageView"
+        android:id="@+id/machineHealthBar"
         android:layout_alignParentTop="true"
-        android:layout_toLeftOf="@+id/mao2"
-        android:layout_toStartOf="@+id/mao2" />
+        android:layout_toLeftOf="@+id/machineHand"
+        android:layout_toStartOf="@+id/machineHand" />
 
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/imageView2"
-        android:layout_alignBottom="@+id/mao1"
-        android:layout_toRightOf="@+id/mao1"
-        android:layout_toEndOf="@+id/mao1" />
+        android:id="@+id/myHealthBar"
+        android:layout_alignBottom="@+id/myHand"
+        android:layout_toRightOf="@+id/myHand"
+        android:layout_toEndOf="@+id/myHand" />
 </RelativeLayout>

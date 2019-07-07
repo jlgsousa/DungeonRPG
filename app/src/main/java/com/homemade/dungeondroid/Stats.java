@@ -5,13 +5,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.homemade.dungeondroid.service.DBHandler;
+import com.homemade.dungeondroid.entity.Player;
+import com.homemade.dungeondroid.service.PlayerService;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Stats extends AppCompatActivity {
 
-    private DBHandler dbhandler;
-    private ListView JogadorListView;
+    private PlayerService playerService;
+    private ListView playerListView;
     private ArrayAdapter<String> mAdapter;
 
     @Override
@@ -19,26 +23,30 @@ public class Stats extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_stats);
 
-        dbhandler = new DBHandler(this);
+        playerService = new PlayerService();
+        playerService.init(new DBHandler(this));
 
-        JogadorListView = (ListView) findViewById(R.id.list_todo);
+        playerListView = findViewById(R.id.list_todo);
         updateUI();
 
     }
 
     private void updateUI() {
-        List<Player> JogadorList = dbhandler.getAllJogadores();
-        ArrayList<String> Jogadores = new ArrayList<>();
-        for (Player jogador : JogadorList){
-            Jogadores.add("Nome: " + jogador.getUsername()  + " Vitorias: " + jogador.getVitorias() + " Derrotas: " + jogador.getDerrotas());
+
+        List<String> players = new ArrayList<>();
+
+        for (Player player : playerService.getPlayers()){
+            players.add(getString(R.string.name) + player.getUsername()
+                    + getString(R.string.victories) + player.getVictories()
+                    + getString(R.string.defeats) + player.getDefeats());
         }
 
         if (mAdapter == null) {
-            mAdapter = new ArrayAdapter<>(this, R.layout.activity_stats, R.id.jogador_id, Jogadores);
-            JogadorListView.setAdapter(mAdapter);
+            mAdapter = new ArrayAdapter<>(this, R.layout.activity_stats, R.id.jogador_id, players);
+            playerListView.setAdapter(mAdapter);
         } else {
             mAdapter.clear();
-            mAdapter.addAll(Jogadores);
+            mAdapter.addAll(players);
             mAdapter.notifyDataSetChanged();
         }
     }

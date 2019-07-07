@@ -1,10 +1,11 @@
 package com.homemade.dungeondroid;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -13,24 +14,25 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.homemade.dungeondroid.entity.GameEngine;
+import com.homemade.dungeondroid.entity.level.first.FirstEngine;
+
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.List;
 
 public class Battle extends AppCompatActivity {
 
-    MediaPlayer mediaplayer = new MediaPlayer();
-    String opponent = " ";
-    private static final String TAG = "MyActivity";
+    public final static String EXTRA_MESSAGE = "com.homemade.dungeondroid";
 
-    ArrayList<Integer> JogadasMinhas = new ArrayList<>();
-    ArrayList<Integer> JogadasMaquina = new ArrayList<>();
-    int Vitorias = 0;
-    int Empates = 0;
-    int Derrotas = 0;
-
-    Machine machine = new Machine();
-
-    public final static String EXTRA_MESSAGE = "com.example.android.rpc";
+    private ArrayList<Move> myMoves;
+    private ArrayList<Move> machineMoves;
+    private MediaPlayer mediaplayer;
+    private Machine machine;
+    private String opponent;
+    private int victories;
+    private int draws;
+    private int defeats;
+    private GameEngine gameEngine;
 
     AnimationDrawable manAnimation;
 
@@ -39,53 +41,43 @@ public class Battle extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_batalha);
 
-        Intent intent = getIntent();
-        JogadasMinhas = intent.getIntegerArrayListExtra("myMoves");
-        JogadasMaquina = intent.getIntegerArrayListExtra("machineMoves");
-        opponent = intent.getStringExtra(Battle.EXTRA_MESSAGE);
-        Log.e("TAG","opponent: "+opponent);
+        //TODO: This should be flexible
+        gameEngine = new FirstEngine();
 
-        //Display das imagens
-        ImageView imageView = (ImageView) findViewById(R.id.mao1);
-        ImageView imageView2 = (ImageView) findViewById(R.id.mao2);
-        imageView.setImageResource(R.drawable.mefight);
+        Intent intent = getIntent();
+        myMoves = (ArrayList<Move>) intent.getSerializableExtra("myMoves");
+        machineMoves = (ArrayList<Move>) intent.getSerializableExtra("machineMoves");
+        mediaplayer = new MediaPlayer();
+        machine = new Machine();
+
+        opponent = intent.getStringExtra(Battle.EXTRA_MESSAGE);
+        Log.d("TAG","opponent: " + opponent);
+        loadUiBattle(opponent);
+
+    }
+
+    private void loadUiBattle(String opponent) {
+        ImageView myHandView = findViewById(R.id.myHand);
+        ImageView machineHandView = findViewById(R.id.machineHand);
+
+        myHandView.setImageResource(R.drawable.mefight);
 
         if (opponent.equals("Mewtwo")){
-            imageView2.setImageResource(R.drawable.rocket);
+            gameEngine.playBossSong(Battle.this, mediaplayer);
 
-            manAnimation = (AnimationDrawable)imageView2.getDrawable();
+            machineHandView.setImageResource(R.drawable.rocket);
+
+            manAnimation = (AnimationDrawable) machineHandView.getDrawable();
             manAnimation.start();
-
-            Uri path = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.mewtwo_fight);
-            mediaplayer = MediaPlayer.create(Battle.this,path);
-            mediaplayer.start();
-
         } else {
+            gameEngine.playBattleSong(Battle.this, mediaplayer);
 
-            Uri path = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.battle);
-            mediaplayer = MediaPlayer.create(Battle.this,path);
-            mediaplayer.start();
-
-            Random r = new Random();
-            int choice = r.nextInt(4)+1;
-            switch (choice){
-                case 1:
-                    imageView2.setImageResource(R.drawable.misty);
-                    break;
-                case 2:
-                    imageView2.setImageResource(R.drawable.dork);
-                    break;
-                case 3:
-                    imageView2.setImageResource(R.drawable.gary);
-                    break;
-                case 4:
-                    imageView2.setImageResource(R.drawable.giovanni);
-                    break;
-            }
+            machineHandView.setImageResource(gameEngine.loadOpponentResourceId());
         }
+
         //HP
-        ImageView hp1 = (ImageView) findViewById(R.id.imageView);
-        ImageView hp2 = (ImageView) findViewById(R.id.imageView2);
+        ImageView hp1 = findViewById(R.id.machineHealthBar);
+        ImageView hp2 = findViewById(R.id.myHealthBar);
         hp1.setImageResource(R.drawable.hp1);
         hp2.setImageResource(R.drawable.hp1);
     }
@@ -95,132 +87,164 @@ public class Battle extends AppCompatActivity {
         super.onStart();
     }
 
-    public void Rock(View view){
-        ImageView imageView = (ImageView) findViewById(R.id.mao1);
+    public void rock(View view){
+        ImageView imageView = findViewById(R.id.myHand);
         imageView.setImageResource(R.drawable.rock);
-        Jogar(1);
+        play(Move.ROCK);
     }
-    public void Paper(View view){
-        ImageView imageView = (ImageView) findViewById(R.id.mao1);
+
+    public void paper(View view){
+        ImageView imageView = findViewById(R.id.myHand);
         imageView.setImageResource(R.drawable.paper);
-        Jogar(2);
+        play(Move.PAPER);
     }
-    public void Scissors(View view){
-        ImageView imageView = (ImageView) findViewById(R.id.mao1);
+
+    public void scissors(View view){
+        ImageView imageView = findViewById(R.id.myHand);
         imageView.setImageResource(R.drawable.scissors);
-        Jogar(3);
+        play(Move.SCISSORS);
     }
 
-    public void Run(View view){
-        TextView textView = (TextView) findViewById(R.id.textView);
+    public void run(View view){
+        TextView textView = findViewById(R.id.messageView);
 
-        Random r = new Random();
-        if (r.nextInt(11) < 8){
-            textView.setText("You got away safely");
+        boolean runSuccessful = gameEngine.runFromBattle();
+
+        if (runSuccessful){
+            textView.setText(getString(R.string.got_away_safely));
             Intent intent = new Intent(this, MainActivity.class);
-            intent.putIntegerArrayListExtra("myMoves",JogadasMinhas);
-            intent.putIntegerArrayListExtra("machineMoves",JogadasMaquina);
-            setResult(RESULT_OK,intent);
+            intent.putExtra("myMoves", myMoves);
+            intent.putExtra("machineMoves", machineMoves);
+
+            setResult(RESULT_OK, intent);
             finish();
-        }else{
-            textView.setText("The opponent blocked your escape!");
-            Button button = (Button) findViewById(R.id.run);
+        } else {
+            textView.setText(getString(R.string.opponent_blocked_escape));
+            Button button = findViewById(R.id.run);
             button.setVisibility(View.INVISIBLE);
         }
     }
 
-    public void Jogar(int MinhaJogada){
-        if (JogadasMaquina.size() < 5){
-            machine.AiMove = machine.JogaRandom();
-        }
-        else {
-            machine.AiMove = machine.PreveJogada1(JogadasMinhas,JogadasMaquina);
-        }
+    public void play(Move move){
+        Move machineMove = machinePlay();
 
-        //Por imagem da jogada da machine
-        switch (machine.AiMove){
-            case 1:
-                ImageView imageView = (ImageView) findViewById(R.id.mao2);
-                imageView.setImageResource(R.drawable.rockm);
+        loadMachineHandView(machineMove);
+
+        Result outcome = machine.getResult(move, machineMove);
+        processOutcome(outcome);
+
+        myMoves.add(move);
+        machineMoves.add(machineMove);
+
+        TextView messageView = findViewById(R.id.messageView);
+        messageView.setText(getString(R.string.battle_state, victories, draws, defeats));
+    }
+
+    private Move machinePlay() {
+        if (machineMoves.size() < 5){
+            return machine.randomMove();
+        } else {
+            return machine.antecipateByPairOfMoves(myMoves, machineMoves);
+        }
+    }
+
+    private void loadMachineHandView(Move machineMove) {
+        ImageView machineHandView = findViewById(R.id.machineHand);
+
+        switch (machineMove){
+            case ROCK:
+                machineHandView.setImageResource(R.drawable.rockm);
                 break;
-            case 2:
-                ImageView imageView1 = (ImageView) findViewById(R.id.mao2);
-                imageView1.setImageResource(R.drawable.paperm);
+            case PAPER:
+                machineHandView.setImageResource(R.drawable.paperm);
                 break;
-            case 3:
-                ImageView imageView2 = (ImageView) findViewById(R.id.mao2);
-                imageView2.setImageResource(R.drawable.scissorsm);
+            case SCISSORS:
+                machineHandView.setImageResource(R.drawable.scissorsm);
         }
+    }
 
-        String resultado = machine.Resultado(MinhaJogada, machine.AiMove);
-
-        if (resultado.equals("Ganhou")){
-            Vitorias += 1;
-
-            ImageView imageView = (ImageView) findViewById(R.id.imageView);
-            if (Vitorias == 1){imageView.setImageResource(R.drawable.hp2);}
-            else if (Vitorias == 2){imageView.setImageResource(R.drawable.hp3);}
-            else if (Vitorias == 3){imageView.setImageResource(R.drawable.hp4);}
-
-            if (Vitorias > 3){
-
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.putIntegerArrayListExtra("myMoves",JogadasMinhas);
-                intent.putIntegerArrayListExtra("machineMoves",JogadasMaquina);
-
-                if (mediaplayer.isPlaying()){
-                    mediaplayer.stop();
-                }
-
-                Uri path = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.victory);
-                mediaplayer = MediaPlayer.create(Battle.this,path);
-                mediaplayer.start();
-
-                if (!opponent.equals("Mewtwo")){
-                    Toast.makeText(this,"Congratulations you've won!", Toast.LENGTH_SHORT).show();
-
-                    intent.putExtra("Vitorias","sim");
-                    setResult(RESULT_OK,intent);
-                    finish();
-                }else{
-                    Toast.makeText(this,"Congratulations you've won!", Toast.LENGTH_SHORT).show();
-
-                    intent.putExtra("VitorMew","sim");
-                    setResult(RESULT_OK,intent);
-                    finish();
-                }
-            }
+    private void processOutcome(Result outcome) {
+        ImageView myHealthView = findViewById(R.id.myHealthBar);
+        if (outcome == Result.WIN){
+            victories += 1;
+            processVictories(myHealthView, victories);
+        } else if (outcome == Result.DRAW){
+            draws += 1;
+        } else if (outcome == Result.LOST){
+            defeats += 1;
+            processDefeats(myHealthView, defeats);
         }
-        else if (resultado.equals("Empatou")){
-            Empates += 1;
+    }
+
+    private void processVictories(ImageView myHealthView, int victories) {
+        if (victories == 1) myHealthView.setImageResource(R.drawable.hp2);
+        else if (victories == 2) myHealthView.setImageResource(R.drawable.hp3);
+        else if (victories == 3) myHealthView.setImageResource(R.drawable.hp4);
+        else if (victories > 3) {
+            gameEngine.playWinningSong(this, mediaplayer);
+            showWinningDialog();
+            goBackAfterVictory();
         }
-        else if (resultado.equals("Perdeu")){
-            Derrotas += 1;
+    }
 
-            ImageView imageView = (ImageView) findViewById(R.id.imageView2);
-            if (Derrotas == 1){imageView.setImageResource(R.drawable.hp2);}
-            else if (Derrotas == 2){imageView.setImageResource(R.drawable.hp3);}
-            else if (Derrotas == 3){imageView.setImageResource(R.drawable.hp4);}
+    private void showWinningDialog() {
+        new AlertDialog.Builder(this)
+                .setMessage(getString(R.string.won_dialog_title))
+                .setNeutralButton(getString(R.string.confirm_button), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
 
-            if (Derrotas > 3){
+    private void goBackAfterVictory() {
+        Toast.makeText(this, getString(R.string.congrats_win), Toast.LENGTH_SHORT).show();
 
-                //POR AQUI UM FRAGMENTO COM A MENSAGEM E QUE SE DESTROI!!!
-                Toast.makeText(this,"Seems like you've Lost!", Toast.LENGTH_SHORT).show();
-
-                Intent intent = new Intent(this, MainActivity.class);
-                intent.putIntegerArrayListExtra("myMoves",JogadasMinhas);
-                intent.putIntegerArrayListExtra("machineMoves",JogadasMaquina);
-                intent.putExtra("Derrotas","sim");
-                setResult(RESULT_OK,intent);
-                finish();
-            }
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("myMoves", myMoves);
+        intent.putExtra("machineMoves", machineMoves);
+        if (!opponent.equals("Mewtwo")){
+            intent.putExtra("victories","sim");
+        } else {
+            intent.putExtra("VitorMew","sim");
         }
+        setResult(RESULT_OK,intent);
+        finish();
+    }
 
-        JogadasMinhas.add(MinhaJogada);
-        JogadasMaquina.add(machine.AiMove);
+    private void processDefeats(ImageView myHealthView, int defeats) {
+        if (defeats == 1) myHealthView.setImageResource(R.drawable.hp2);
+        else if (defeats == 2) myHealthView.setImageResource(R.drawable.hp3);
+        else if (defeats == 3) myHealthView.setImageResource(R.drawable.hp4);
+        else if (defeats > 3) {
+            showLosingDialog();
+            gameEngine.playLosingSong(this, mediaplayer);
+            goBackAfterDefeat();
+        }
+    }
 
-        TextView textView = (TextView) findViewById(R.id.textView);
-        textView.setText("Vitorias: "+Vitorias+"\nEmpates: "+Empates+"\nDerrotas: "+Derrotas);
+    private void showLosingDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.lost_dialog_title)
+                .setMessage(getString(R.string.lost_dialog_message))
+                .setNeutralButton(getString(R.string.confirm_button), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
+
+    private void goBackAfterDefeat() {
+        Toast.makeText(this, getString(R.string.congrats_lost), Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra("myMoves", myMoves);
+        intent.putExtra("machineMoves", machineMoves);
+        intent.putExtra("defeats","sim");
+        setResult(RESULT_OK,intent);
+        finish();
     }
 
     @Override
@@ -239,5 +263,17 @@ public class Battle extends AppCompatActivity {
             mediaplayer.release();
             mediaplayer = null;
         }
+    }
+
+    public enum Move {
+        ROCK,
+        PAPER,
+        SCISSORS
+    }
+
+    public enum Result {
+        WIN,
+        DRAW,
+        LOST
     }
 }

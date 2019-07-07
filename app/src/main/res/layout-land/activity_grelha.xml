@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/LayoutMeu"
+    android:id="@+id/grid_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="@dimen/activity_vertical_margin"
@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="↑"
-        android:onClick="Up"
+        android:onClick="moveUp"
         android:layout_above="@+id/right"
         android:layout_toLeftOf="@+id/right"
         android:layout_toStartOf="@+id/right" />
@@ -40,7 +40,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="→"
-        android:onClick="Right"
+        android:onClick="moveRight"
         android:layout_above="@+id/down"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
@@ -50,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="←"
-        android:onClick="Left"
+        android:onClick="moveLeft"
         android:layout_below="@+id/up"
         android:layout_toLeftOf="@+id/up"
         android:layout_toStartOf="@+id/up" />
@@ -61,7 +61,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="↓"
-        android:onClick="Down"
+        android:onClick="moveDown"
         android:layout_alignParentBottom="true"
         android:layout_toLeftOf="@+id/right"
         android:layout_toStartOf="@+id/right" />

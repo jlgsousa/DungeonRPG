@@ -16,7 +16,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".Battle" />
-        <activity android:name=".Grid" />
+        <activity android:name=".FirstLevelActivity" />
         <activity android:name=".Stats"></activity>
     </application>
 

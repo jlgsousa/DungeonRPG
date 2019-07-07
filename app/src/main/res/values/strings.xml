@@ -9,4 +9,25 @@
     <string name="registration_done">Register done!</string>
     <string name="cancel">Cancel</string>
     <string name="username_or_password_incorrect">Username or Password incorrect</string>
+
+    <string name="pokeball_discovered">You have won the power of the Gods!</string>
+    <string name="player_not_ready_yet">You are not ready to fight me, come back when you have at least one pokeball</string>
+
+    <string name="got_away_safely">You got away safely</string>
+    <string name="opponent_blocked_escape">The opponent blocked your escape!</string>
+
+    <string name="name">Name:</string>
+    <string name="victories">Victories:</string>
+    <string name="defeats">Defeats:</string>
+    <string name="battle_state">victories: %1$d \ndraws: %2$d\ndefeats: %3$d</string>
+
+    <string name="won_dialog_title">Winner :)</string>
+    <string name="won_dialog_message">Hooray you won !!</string>
+    <string name="lost_dialog_title">Lost :(</string>
+    <string name="lost_dialog_message">Aaaaaaand you died !!</string>
+    <string name="confirm_button">continue</string>
+    <string name="congrats_win">Congratulations you have won!</string>
+    <string name="congrats_lost">Seems like you have lost!</string>
+
+    <string name="error_level_loading">Error while starting level, try again later</string>
 </resources>

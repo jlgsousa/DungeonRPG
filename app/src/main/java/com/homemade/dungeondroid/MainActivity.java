@@ -18,7 +18,9 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import java.util.List;
+import com.homemade.dungeondroid.service.DBHandler;
+import com.homemade.dungeondroid.entity.Player;
+import com.homemade.dungeondroid.service.PlayerService;
 
 import static com.homemade.dungeondroid.constants.Constants.ANDROID_RESOURCE;
 import static com.homemade.dungeondroid.constants.Constants.PLAYER_INFO;
@@ -26,17 +28,19 @@ import static com.homemade.dungeondroid.constants.Constants.PLAYER_INFO;
 
 public class MainActivity extends AppCompatActivity {
 
-    MediaPlayer mediaplayer;
-    private DBHandler dbhandler;
+    private MediaPlayer mediaplayer;
+    private PlayerService playerService;
+    private Player player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbhandler = new DBHandler(this);
+        playerService = new PlayerService();
+        playerService.init(new DBHandler(this));
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
     }
 
@@ -47,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (mediaplayer.isPlaying()){
+        if (mediaplayer != null && mediaplayer.isPlaying()){
             mediaplayer.stop();
         }
     }
@@ -63,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
         Uri path = Uri.parse(openingTheme);
         mediaplayer = MediaPlayer.create(MainActivity.this, path);
-        mediaplayer.start();
+        if (mediaplayer != null) mediaplayer.start();
     }
 
     @Override
@@ -87,77 +91,57 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        LinearLayout layout=new LinearLayout(this);
+        LinearLayout layout = new LinearLayout(this);
+
         final EditText usernameBox = new EditText(this);
         usernameBox.setHint(getString(R.string.player_name));
-        layout.addView(usernameBox);
 
         final EditText passwordBox = new EditText(this);
         passwordBox.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
         passwordBox.setTransformationMethod(PasswordTransformationMethod.getInstance());
         passwordBox.setHint(getString(R.string.player_password));
+
         layout.setOrientation(LinearLayout.VERTICAL);
+        layout.addView(usernameBox);
         layout.addView(passwordBox);
 
         switch (item.getItemId()) {
-            case R.id.action_settings:
-
+            case R.id.action_register:
                 new AlertDialog.Builder(this)
                         .setView(layout)
                         .setPositiveButton(getString(R.string.player_register), new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog12, int which) {
-                                String username = String.valueOf(usernameBox.getText());
-                                String password = String.valueOf(passwordBox.getText());
-
-                                List<Player> playerList = dbhandler.getAllJogadores();
-
-                                for (Player gamer : playerList) {
-                                    if (username.equals(gamer.getUsername())) {
-                                        Toast.makeText(MainActivity.this, MainActivity.this.getString(R.string.existing_user), Toast.LENGTH_SHORT).show();
-                                        return;
-                                    }
-                                }
-
-                                Player player = new Player();
-                                player.setUsername(username);
-                                player.setPassword(password);
-                                player.setVitorias(0);
-                                player.setDerrotas(0);
-                                dbhandler.addJogador(player);
-                                Toast.makeText(MainActivity.this, MainActivity.this.getString(R.string.registration_done), Toast.LENGTH_SHORT).show();
+                            public void onClick(DialogInterface dialog, int which) {
+                                boolean isRegistration = playerService.register(String.valueOf(usernameBox.getText()), String.valueOf(passwordBox.getText()));
+                                Toast.makeText(MainActivity.this,
+                                        getString(isRegistration ? R.string.registration_done : R.string.existing_user),
+                                        Toast.LENGTH_SHORT).show();
                             }
                         })
                         .setNegativeButton(getString(R.string.cancel), null)
                         .create()
                         .show();
-
                 return true;
 
-            case R.id.action_about:
-
+            case R.id.action_login:
                 new AlertDialog.Builder(this)
                         .setView(layout)
                         .setPositiveButton(getString(R.string.player_login), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                boolean failedLogin = true;
-                                String username = String.valueOf(usernameBox.getText());
-                                String password = String.valueOf(passwordBox.getText());
-                                List<Player> playerList = dbhandler.getAllJogadores();
+                                boolean isLogin = playerService.login(String.valueOf(usernameBox.getText()), String.valueOf(passwordBox.getText()));
+                                if (isLogin) {
+                                    player = playerService.getPlayer(String.valueOf(usernameBox.getText()), String.valueOf(passwordBox.getText()));
 
-                                for (Player gamer : playerList) {
-                                    if (username.equals(gamer.getUsername()) && password.equals(gamer.getPassword())) {
-                                        Intent intent = new Intent(MainActivity.this, Grid.class);
-                                        int[] info = {gamer.getId(), gamer.getVitorias(), gamer.getDerrotas()};
-                                        intent.putExtra(PLAYER_INFO, info);
-                                        MainActivity.this.startActivity(intent);
-                                        failedLogin = false;
-                                    }
-                                }
+                                    Intent intent = new Intent(MainActivity.this, FirstLevelActivity.class);
+                                    Bundle bundle = new Bundle();
+                                    bundle.putSerializable(PLAYER_INFO, player);
+//                                    intent.putExtra(PLAYER_INFO, new int[]{player.getId(), player.getVictories(), player.getDefeats()});
+                                    intent.putExtras(bundle);
 
-                                if (failedLogin) {
-                                    Toast.makeText(MainActivity.this, MainActivity.this.getString(R.string.username_or_password_incorrect), Toast.LENGTH_SHORT).show();
+                                    startActivity(intent);
+                                } else {
+                                    Toast.makeText(MainActivity.this, getString(R.string.username_or_password_incorrect), Toast.LENGTH_SHORT).show();
                                 }
                             }
                         })
